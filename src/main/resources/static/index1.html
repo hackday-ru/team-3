@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div>
+    <div>
+        <button id="connect" onclick="connectToServer();">Connect</button>
+    </div>
+    <div id="conversationDiv">
+        <label>What is your name?</label><input type="text" id="name" />
+        <button id="sendName" onclick="sendName();">Send</button>
+        <p id="response"></p>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+    //Функция выполняется при загрузке страницы
+    function connectToServer() {
+        var msg = {
+            "cmd": "connect",
+            "text": "",
+            "param": ""
+        }
+        socket.send(JSON.stringify(msg));
+    }
+
+
+
+
+
+
+
+    var socket = ws();
+
+    function ws(){
+        var s = new WebSocket("ws://" + window.location.host + "/ws");
+
+        s.onopen = function() {
+            console.log("Соединение установлено.");
+            connectToServer()
+        };
+
+        s.onclose = function(event) {
+            if (event.wasClean) {
+                console.log('Соединение закрыто чисто');
+            } else {
+                console.log('Обрыв соединения'); // например, "убит" процесс сервера
+            }
+            console.log('Код: ' + event.code + ' причина: ' + event.reason);
+
+
+            setTimeout(function(){
+                socket = ws();
+            }, 500000)
+
+        };
+
+        s.onmessage = function(event) {
+            var msg = JSON.parse(event.data);
+            console.log(event.data)
+            console.log(msg)
+
+
+        };
+
+        s.onerror = function(error) {
+            console.log("Ошибка " + error.message);
+            setTimeout(function(){
+                socket = ws();
+            }, 5000)
+
+        };
+        return s;
+    }
+
+
+
+
+
+    var stompClient = null;
+
+
+    function sendName() {
+        var text = document.getElementById('name').value;
+        socket.send(JSON.stringify({ 'cmd': 'send', 'text': text, 'param': "" }));
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Чат доверия</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="./bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="sidebar text-center">
+      <div class="sidebar--wrapper">
+          <div class="sidebar--logo">
+            B2<i class="fa fa-heartbeat"></i>K
+          </div>
+          <h3><small>Врач</small></h3>
+          <div class="col-lg-8 col-md-8 col-xs-8 col-xs-offset-2 col-lg-offset-2">
+            <img src="./images/doctor.jpg" alt=""  class="img-responsive img-circle">
+          </div>
+          <h2><small>Жаклин</small></h2>
+      </div>
+
+      
+    <div class="sidebar--footer">
+        <a href="#"><i class="fa fa-sign-out"></i> Выйти</a>
+    </div>
+    </div>
+    <div class="content fullWidth">
+      <div class="content--toolbar">
+        <button class="btn btn-link btn-lg" data-toggle="sidebar"><i class="fa fa-bars"></i></button>
+      </div>
+      <div class="content--list">
+        
+
+      </div>
+    <div class="content--form">
+        <div class="col-sm-11 col-xs-10 content--form-text">
+          <input type="text" class="form-control" placeholder="Введите ваше сообщение" id="input-text">
+        </div>
+        <div class="col-sm-1 col-xs-2 content--form-button">
+          <button class="btn btn-success form-control" id='send-btn'>Отпр. </button>
+        </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/script.js"></script>
+
+
+
+
+
+      <script type="text/javascript">
+
+
+        //Функция выполняется при загрузке страницы
+        function connectToServer() {
+          var msg = {
+            "cmd": "connect",
+            "text": "",
+            "param": ""
+          }
+          socket.send(JSON.stringify(msg));
+        }
+
+
+
+
+
+
+
+        var socket = ws();
+
+        function ws(){
+          var s = new WebSocket("ws://" + window.location.host + "/ws");
+
+          s.onopen = function() {
+            console.log("Соединение установлено.");
+            connectToServer()
+          };
+
+          s.onclose = function(event) {
+            if (event.wasClean) {
+              console.log('Соединение закрыто чисто');
+            } else {
+              console.log('Обрыв соединения'); // например, "убит" процесс сервера
+            }
+            console.log('Код: ' + event.code + ' причина: ' + event.reason);
+
+
+            setTimeout(function(){
+              socket = ws();
+            }, 500000)
+
+          };
+
+          s.onmessage = function(event) {
+            var msg = JSON.parse(event.data);
+            if (msg.cmd == 'connect' && msg.param == 1){
+              $(".content--list").append('<div class="content--message"> <div class="content--message-left">Добрый день, чем я могу вам помочь?</div></div>')
+            }
+
+            if (msg.cmd == 'send'){
+              $(".content--list").append('<div class="content--message"> <div class="content--message-left">' + msg.text + '</div></div>')
+            }
+
+            if (msg.cmd == 'close'){
+              $(".content--list").append('<div class="content--message"> <div class="content--message-left">' + 'Спасибо Вам' + '</div></div>')
+            }
+
+
+            console.log(msg)
+
+
+          };
+
+          s.onerror = function(error) {
+            console.log("Ошибка " + error.message);
+            setTimeout(function(){
+              socket = ws();
+            }, 5000)
+
+          };
+          return s;
+        }
+
+
+
+
+
+        var stompClient = null;
+
+        $('#send-btn').click(function(){
+
+          var text = $("#input-text").val();
+          $("#input-text").val("");
+
+          var obj = {
+            'cmd':"send",
+            "text": text,
+            "param": ""
+          }
+          socket.send(JSON.stringify(obj));
+
+          $(".content--list").append('<div class="content--message"> <div class="content--message-right">' + text + '</div></div>')
+        })
+
+
+      </script>
+
+
+
+  </body>
+</html>
