@@ -1,19 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/bootstrap.css">
     <title>Hello WebSocket</title>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            background: rgba(3,138,179,1);
+            background: -moz-linear-gradient(top, rgba(3,138,179,1) 0%, rgba(117,189,209,1) 41%, rgba(20,214,226,1) 100%);
+            background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(3,138,179,1)), color-stop(41%, rgba(117,189,209,1)), color-stop(100%, rgba(20,214,226,1)));
+            background: -webkit-linear-gradient(top, rgba(3,138,179,1) 0%, rgba(117,189,209,1) 41%, rgba(20,214,226,1) 100%);
+            background: -o-linear-gradient(top, rgba(3,138,179,1) 0%, rgba(117,189,209,1) 41%, rgba(20,214,226,1) 100%);
+            background: -ms-linear-gradient(top, rgba(3,138,179,1) 0%, rgba(117,189,209,1) 41%, rgba(20,214,226,1) 100%);
+            background: linear-gradient(to bottom, rgba(3,138,179,1) 0%, rgba(117,189,209,1) 41%, rgba(20,214,226,1) 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#038ab3', endColorstr='#14d6e2', GradientType=0 );
+            padding: 0;
+            margin: 0;
+        }
+        .right {
+            display: table;
+            height: 100%;
+        }
+        .form {
+            display: table-cell;
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
+
 <noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being enabled. Please enable
     Javascript and reload this page!</h2></noscript>
-<div>
-    <div>
-        <button id="connect" onclick="connectToServer();">Connect</button>
-    </div>
-    <div id="conversationDiv">
-        <label>What is your name?</label><input type="text" id="name" />
-        <button id="sendName" onclick="sendName();">Send</button>
-        <p id="response"></p>
+<div class="right col-lg-offset-4 col-lg-4 col-xs-12 col-sm-12">
+    <div class="form">
+        <div class="col-lg-12 text-center">
+            <h1 style="color: #fff; letter-spacing: 14px;">MEDY</h1>
+            <br>
+        </div>
+        
+        <div class="col-lg-12">
+            <form action="">
+
+                <div class="col-lg-12 form-group">
+                    <input type="text" class="form-control" placeholder="Логин">
+                </div>
+
+                <div class="col-lg-12 form-group">
+                    <input type="password" class="form-control" placeholder="Пароль">
+                </div>
+                <br>
+                <div class="col-lg-12 form-group text-center">
+                    <button class="btn btn-success">Войти!</button>
+                </div>
+            </form>
+        </div>    
     </div>
 </div>
 

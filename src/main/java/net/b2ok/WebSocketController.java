@@ -65,30 +65,49 @@ public class WebSocketController extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        User user = usersSession.get(usersSession.remove(session).connectToSession);
-
-        if (user == null){
-            System.out.println("user == null");
-            return;
-        }
-
-        user.connectToSession = null;
-
-        if (user.type){
-            freeDoctorSession.add(user);
-        } else {
-        //    freeUsersSession.add(user);
-            WebSocketMessage webSocketMessage = new TextMessage("{\"cmd\": \"close\"}");
-            try {
-                System.out.println(user.toString());
-                user.session.sendMessage(webSocketMessage);
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            User user = usersSession.remove(session);
+            System.out.println("handleTransportError: " + user);
+            if (user == null) {
+                System.out.println("user == null");
+                return;
             }
+            user = usersSession.get(user.connectToSession);
+
+            if (user == null) {
+                System.out.println("user == null");
+                return;
+            }
+
+            user.connectToSession = null;
+
+            if (user.type) {
+                User getUser = freeUsersSession.poll();
+
+                if (getUser == null) { //Если нету суецидников, то добавляем свободного врача
+                    freeDoctorSession.add(usersSession.get(session));
+                } else {
+                    getUser.connectToSession = session;
+                    user.connectToSession = getUser.session;
+
+                    OneMessage msg = new OneMessage("connect", "", "1");
+
+                    WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
+                    try {
+                        getUser.session.sendMessage(webSocketMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                //    freeUsersSession.add(user);
+                WebSocketMessage webSocketMessage = new TextMessage("{\"cmd\": \"close\"}");
+                user.session.sendMessage(webSocketMessage);
+            }
+
+        } catch (Exception e) {
+        //    e.printStackTrace();
         }
-
-
-
 
     }
 
@@ -119,10 +138,10 @@ public class WebSocketController extends TextWebSocketHandler {
         } catch (Exception e){}
 
         if (msg != null) {
-            WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
             try {
+                WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
                 session.sendMessage(webSocketMessage);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -132,64 +151,68 @@ public class WebSocketController extends TextWebSocketHandler {
         String param = msg.getParam();
 
         msg = null;
-        if ((param != null) && (!param.equals(""))){
-            User user = new User(session, true);
-            usersSession.put(session, user);
 
-            User getUser = freeUsersSession.poll();
+        try {
+            if ((param != null) && (!param.equals(""))) {
+                User user = new User(session, true);
+                usersSession.put(session, user);
 
-            if (getUser == null) { //Если нету суецидников, то добавляем свободного врача
-                freeDoctorSession.add(usersSession.get(session));
+                User getUser = freeUsersSession.poll();
+
+                if (getUser == null) { //Если нету суецидников, то добавляем свободного врача
+                    freeDoctorSession.add(usersSession.get(session));
+                } else {
+
+                    getUser.connectToSession = session;
+                    usersSession.get(session).connectToSession = getUser.session;
+
+
+                    msg = new OneMessage("connect", "", "1");
+
+                    WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
+                    try {
+                        getUser.session.sendMessage(webSocketMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
             } else {
+                User user = new User(session, false);
+                usersSession.put(session, user);
 
-                getUser.connectToSession = session;
-                usersSession.get(session).connectToSession = getUser.session;
+                User getUser = freeDoctorSession.poll();
+
+                if (getUser == null) { //Если нету врачей, то добавляем суецидников в очередь
+                    freeUsersSession.add(usersSession.get(session));
+                } else {
+
+                    getUser.connectToSession = session;
+                    usersSession.get(session).connectToSession = getUser.session;
 
 
-                msg = new OneMessage("connect", "", "1");
+                    msg = new OneMessage("connect", "", "1");
 
-                WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
-                try {
-                    getUser.session.sendMessage(webSocketMessage);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
+                    try {
+                        getUser.session.sendMessage(webSocketMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
-        } else {
-            User user = new User(session, false);
-            usersSession.put(session, user);
 
-            User getUser = freeDoctorSession.poll();
-
-            if (getUser == null) { //Если нету врачей, то добавляем суецидников в очередь
-                freeUsersSession.add(usersSession.get(session));
-            } else {
-
-                getUser.connectToSession = session;
-                usersSession.get(session).connectToSession = getUser.session;
-
-
-                msg = new OneMessage("connect", "", "1");
-
-                WebSocketMessage webSocketMessage = new TextMessage(msg.toJson());
-                try {
-                    getUser.session.sendMessage(webSocketMessage);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-
+        } catch (Exception e){}
 
         return msg;
     }
 
     private OneMessage send(WebSocketSession session, OneMessage msg) throws IOException {
 
-        usersSession.get(session).connectToSession.sendMessage(new TextMessage(msg.toJson()));
+        try {
+            usersSession.get(session).connectToSession.sendMessage(new TextMessage(msg.toJson()));
+        } catch (Exception e){}
 
         return null;
     }
